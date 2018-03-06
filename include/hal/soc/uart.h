@@ -104,7 +104,12 @@ int32_t hal_uart_send(uart_dev_t *uart, const void *data, uint32_t size, uint32_
  */
 int32_t hal_uart_recv(uart_dev_t *uart, void *data, uint32_t expect_size,
                       uint32_t *recv_size, uint32_t timeout);
-
+  /*xiehj add*/
+int32_t uart_init_isr_and_buff(uart_dev_t *uart, uint8_t port);
+int32_t uart_get_fifo_data_size(uint8_t port);
+int32_t uart_get_fifo_data(uint8_t port, char *user_buf, uint32_t count);
+int32_t uart_clean_fifo_data(uint8_t port);
+  /*xiehj end*/
 /**
  * Deinitialises a UART interface
  *

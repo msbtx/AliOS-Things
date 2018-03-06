@@ -170,12 +170,167 @@ static void UART_TxISR_16BIT_FIFOEN(UART_HandleTypeDef *huart);
 static void UART_EndTransmit_IT(UART_HandleTypeDef *huart);
 static void UART_RxISR_8BIT(UART_HandleTypeDef *huart);
 static void UART_RxISR_8BIT_Buf_Queue(UART_HandleTypeDef *huart);
+static void UART2_RxISR_8BIT_Buf_Kfifo(UART_HandleTypeDef *huart);
+static void UART1_RxISR_8BIT_Buf_Kfifo(UART_HandleTypeDef *huart);
 static void UART_RxISR_16BIT(UART_HandleTypeDef *huart);
 #if defined(USART_CR1_FIFOEN)
 static void UART_RxISR_8BIT_FIFOEN(UART_HandleTypeDef *huart);
 static void UART_RxISR_16BIT_FIFOEN(UART_HandleTypeDef *huart);
 #endif
+  /*xiehj add*/
+#define min(x, y)	(((x) < (y)) ? (x) : (y))
+#define RX_RB_LENGTH 1024
+unsigned char g_uart1_buff[RX_RB_LENGTH] = {0};
+unsigned char g_uart2_buff[RX_RB_LENGTH] = {0};
+UART_S fifo_uart[2] =
+{
+    {0, 0}, 
+	{0, 0}
+};
 
+HAL_StatusTypeDef uart_sw_init(uint8_t port)
+{	
+    fifo_uart[port].rx.size = RX_RB_LENGTH;
+    fifo_uart[port].rx.in = 0;
+    fifo_uart[port].rx.out = 0;
+    fifo_uart[port].rx.mask = RX_RB_LENGTH - 1;
+    if(port == 1)
+   	 fifo_uart[port].rx.buffer = g_uart2_buff;
+    else if(port == 0)
+	 fifo_uart[port].rx.buffer = g_uart1_buff;	
+	 
+    return HAL_OK;
+}
+
+unsigned int kfifo_put(uint8_t port,
+			 unsigned char *buffer, unsigned int len)
+{
+	unsigned int l;
+	struct kfifo *fifo = (struct kfifo *)&(fifo_uart[port].rx);
+
+	len = min(len, fifo->size - fifo->in + fifo->out);
+
+	/* first put the data starting from fifo->in to buffer end */
+	l = min(len, fifo->size - (fifo->in & (fifo->size - 1)));
+	memcpy(fifo->buffer + (fifo->in & (fifo->size - 1)), buffer, l);
+
+	/* then put the rest (if any) at the beginning of the buffer */
+	memcpy(fifo->buffer, buffer + l, len - l);
+
+	fifo->in += len;
+
+	return len;
+}
+
+unsigned int kfifo_get(uint8_t port, unsigned char *buffer, unsigned int len)
+{
+	unsigned int l;
+	struct kfifo *fifo = (struct kfifo *)&(fifo_uart[port].rx);
+
+	len = min(len, fifo->in - fifo->out);
+	//printf("kfifo_get : %s\n", fifo->buffer);
+	/* first get the data from fifo->out until the end of the buffer */
+	l = min(len, fifo->size - (fifo->out & (fifo->size - 1)));
+	memcpy(buffer, fifo->buffer + (fifo->out & (fifo->size - 1)), l);
+
+	/* then get the rest (if any) from the beginning of the buffer */
+	memcpy(buffer + l, fifo->buffer, len - l);
+	//printf("kfifo_get buffer: %s\n", buffer);
+	fifo->out += len;
+
+	return len;
+}
+
+unsigned int kfifo_data_size(uint8_t port)
+{
+	struct kfifo *fifo = (struct kfifo *)&(fifo_uart[port].rx);
+	
+	return (fifo->in - fifo->out);
+}
+
+unsigned int kfifo_clean(uint8_t port)
+{
+	struct kfifo *fifo = (struct kfifo *)&(fifo_uart[port].rx);
+
+	fifo->in =0;
+	fifo->out = 0;
+	memset(fifo_uart[port].rx.buffer, 0, RX_RB_LENGTH);
+	
+	return 0;
+}
+
+static void UART2_RxISR_8BIT_Buf_Kfifo(UART_HandleTypeDef *huart)
+{
+  uint16_t uhMask = huart->Mask;
+  uint16_t  uhdata;
+  uint8_t data;
+  static uint8_t index = 0;
+
+  	uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
+    	data = (uint8_t)(uhdata & (uint8_t)uhMask);
+
+	kfifo_put(1, (uint8_t *)&data, 1);
+}
+
+static void UART1_RxISR_8BIT_Buf_Kfifo(UART_HandleTypeDef *huart)
+{
+  uint16_t uhMask = huart->Mask;
+  uint16_t  uhdata;
+  uint8_t data;
+  static uint8_t index = 0;
+
+  	uhdata = (uint16_t) READ_REG(huart->Instance->RDR);
+    	data = (uint8_t)(uhdata & (uint8_t)uhMask);
+
+	kfifo_put(0, (uint8_t *)&data, 1);
+}
+
+HAL_StatusTypeDef HAL_UART_init_isr_Buf(UART_HandleTypeDef *huart, uint8_t port)
+{
+  int ret = 0;
+
+  /* Check that a Rx process is not already ongoing */
+  if(huart->RxState == HAL_UART_STATE_READY)
+  {
+    /* Process Locked */
+    __HAL_LOCK(huart);
+
+    //huart->pRxBuffPtr  = pData;
+   // huart->RxXferSize  = 1;
+  //  huart->RxXferCount = 1;
+    huart->RxISR       = NULL;
+    uart_sw_init(port);
+
+    /* Computation of UART mask to apply to RDR register */
+    UART_MASK_COMPUTATION(huart);
+
+    huart->ErrorCode = HAL_UART_ERROR_NONE;
+   // huart->RxState = HAL_UART_STATE_BUSY_RX;
+
+    /* Enable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+    SET_BIT(huart->Instance->CR3, USART_CR3_EIE);
+
+	
+      /* Set the Rx ISR function pointer according to the data word length */
+	  if(port  == 1)
+	   	 huart->RxISR = UART2_RxISR_8BIT_Buf_Kfifo;
+	  else if(port  == 0)
+	   	 huart->RxISR = UART1_RxISR_8BIT_Buf_Kfifo;
+
+       /* Process Unlocked */
+      __HAL_UNLOCK(huart);
+
+     /* Enable the UART Parity Error interrupt and Data Register Not Empty interrupt */
+#if defined(USART_CR1_FIFOEN)
+      SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE_RXFNEIE);
+#else
+      SET_BIT(huart->Instance->CR1, USART_CR1_PEIE | USART_CR1_RXNEIE);
+#endif
+    }
+
+  return ret;
+}
+  /*xiehj end*/
 /**
   * @}
   */

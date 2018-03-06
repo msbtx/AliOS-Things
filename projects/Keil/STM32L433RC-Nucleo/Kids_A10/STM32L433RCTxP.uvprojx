@@ -521,11 +521,6 @@
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\hal\hal_i2c_stm32l4.c</FilePath>
             </File>
             <File>
-              <FileName>hal_uart_stm32l4.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\hal\hal_uart_stm32l4.c</FilePath>
-            </File>
-            <File>
               <FileName>soc_init.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\Kids_A10\soc_init.c</FilePath>
@@ -559,6 +554,11 @@
               <FileName>audio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\Kids_A10\audio.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_uart_stm32l4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\platform\mcu\stm32l4xx\src\STM32L433RC-Nucleo\Kids_A10\hal_uart_stm32l4.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -984,6 +984,16 @@
               <FileName>log.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\utility\log\log.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>GUI\wifi_cmd</GroupName>
+          <Files>
+            <File>
+              <FileName>wifi_cmd_nt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\app\GUI\Kids_A10\wifi_cmd\wifi_cmd_nt.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -14,7 +14,7 @@ extern void version_init(void);
 extern int uData_main(void);
 int aos_framework_init(void)
 {
-    LOG("aos framework init.");
+    //LOG("aos framework init.");
     
     version_init();
 #ifdef MESH_GATEWAY_SERVICE

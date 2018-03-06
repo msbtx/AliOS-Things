@@ -45,6 +45,25 @@
 #include "stm32l4xx_hal_def.h"
 #include <k_api.h>
 
+
+typedef struct kfifo
+{
+	unsigned int in;
+	unsigned int out;
+
+	unsigned int mask;
+	
+	unsigned int size;	
+	unsigned char *buffer;
+}KFIFO_T, *KFIFO_PTR;
+
+typedef struct _uart_
+{
+    uint16_t status;
+
+    KFIFO_T rx;
+} UART_S, *UART_PTR;
+
 /** @addtogroup STM32L4xx_HAL_Driver
   * @{
   */
@@ -1544,7 +1563,13 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart);
 /** @addtogroup UART_Exported_Functions_Group2 IO operation functions
   * @{
   */
-
+  /*xiehj add*/
+HAL_StatusTypeDef HAL_UART_init_isr_Buf(UART_HandleTypeDef *huart, uint8_t port);
+unsigned int kfifo_data_size(uint8_t port);
+unsigned int kfifo_clean(uint8_t port);
+unsigned int kfifo_get(uint8_t port, unsigned char *buffer, unsigned int len);
+unsigned int kfifo_put(uint8_t port, unsigned char *buffer, unsigned int len);
+  /*xiehj end*/
 /* IO operation functions *****************************************************/
 HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
