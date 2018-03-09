@@ -12,8 +12,8 @@ typedef enum {
 #define SAI_DATA_BYTES            (SAI_DATASIZE / 8)
 #define DATA_BUFF_LEN             (4096 / SAI_DATA_BYTES)
 
-#define AUDIO_MAX_TIME						16                                            /* in second */
-#define AUDIO_ADDRESS             0x8020000
+#define AUDIO_MAX_TIME						6                                            /* in second */
+#define AUDIO_ADDRESS             0x8030000
 
 #ifdef FLASH_MONO_DATA
 #define AUDIO_MAX_SIZE            (AUDIO_MAX_TIME * 8000 * SAI_DATA_BYTES)

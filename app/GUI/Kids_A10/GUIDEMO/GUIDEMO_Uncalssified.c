@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "stm32l4xx_hal.h"
 #include <aos/uData.h>
+#include "audio.h"
 
 #if (SHOW_GUIDEMO_UNCLASSIFIED)
 
@@ -70,7 +71,7 @@ static int fd_als  = -1;
 static int fd_ps   = -1;
 
 static GRAPH_SCALE_Handle _hScaleH_sensor, _hScaleV_sensor;
-static int         _Data_Sensor_Adjust;
+// static int         _Data_Sensor_Adjust;
 
 
 static GUI_COLOR _aColorData_sensor[MAX_NUM_DATA_OBJ] = {
@@ -268,14 +269,16 @@ static void _Show_Sensor_Graph(GRAPH_Handle hGraph, GRAPH_DATA_Handle hData[])
   //
   // Add values depending on time
   //
-  int TimeStart, TimeDiff, TimeStep;
-  int NextState, Flag;
+  // int TimeStart, TimeDiff, TimeStep;
+  // int NextState, Flag;
+  // lighten GS LED
+  hal_gpio_output_low(&brd_gpio_table[GPIO_LED_GS]);
 
-  TimeStart = GUIDEMO_GetTime();
-  Flag = 1;
+  // TimeStart = GUIDEMO_GetTime();
+  int Flag = 1;
   do {
     get_acc_data(&x,&y,&z);
-    TimeDiff = GUIDEMO_GetTime() - TimeStart;
+    // TimeDiff = GUIDEMO_GetTime() - TimeStart;
     GRAPH_DATA_YT_AddValue(hData[0], ((I16)x >> 5) + 78);
     GRAPH_DATA_YT_AddValue(hData[1], ((I16)y >> 5) + 78);
     GRAPH_DATA_YT_AddValue(hData[2], ((I16)z >> 5) + 78);
@@ -287,31 +290,42 @@ static void _Show_Sensor_Graph(GRAPH_Handle hGraph, GRAPH_DATA_Handle hData[])
       GRAPH_DetachScale(hGraph, _hScaleV_sensor);
       WM_ValidateWindow(hGraph);
     }
+    /*
     NextState = GUIDEMO_CheckCancel();
     TimeStep  = GUIDEMO_GetTime() - TimeStart;
     if ((TimeStep - TimeDiff) < TIME_STEP) {
       GUI_Delay(TIME_STEP - (TimeStep - TimeDiff));
-    }
-  } while (1);
+    }*/
+    GUI_Delay(50);
+  } while (key_flag == GUI_DEMO_PAGE_3);
+
+  GRAPH_DetachData(hGraph, hData[0]);
+  GRAPH_DetachData(hGraph, hData[1]);
+  GRAPH_DetachData(hGraph, hData[2]);
+
+  // GUIDEMO_NotifyStartNext();
+
+  // shutdown GS LED
+  hal_gpio_output_high(&brd_gpio_table[GPIO_LED_GS]);
 }
 
 static void _Graph_Sensor_Demo()
 {
-  const WIDGET_EFFECT * pEffectOld;
+  // const WIDGET_EFFECT * pEffectOld;
   GRAPH_Handle          hGraph;
-  GRAPH_DATA_Handle     hData[MAX_NUM_DATA_OBJ];
+  GRAPH_DATA_Handle     hData[3];
   // GRAPH_DATA_Handle     hData;
   int                   xSize, ySize, i;
   int                   Graph_xSize, Graph_ySize, Data_ySize;
   int                   Graph_xPos, Graph_yPos;
 
   // set back screen black
-  GUI_SetColor(GUI_BLACK);
-  GUIDEMO_DrawBk(1);
+  // GUI_SetColor(GUI_BLACK);
+  // GUIDEMO_DrawBk(1);
 
   xSize      = LCD_GetXSize();
   ySize      = LCD_GetYSize();  // 256
-  pEffectOld = WIDGET_SetDefaultEffect(&WIDGET_Effect_Simple);
+  // pEffectOld = WIDGET_SetDefaultEffect(&WIDGET_Effect_Simple);
   // Return a poninter to the previous callback routine
   // Set Callback function for background window
   // The given window will be invalidated. This makes sure the window will be redrawn
@@ -354,7 +368,7 @@ static void _Graph_Sensor_Demo()
   // Create and configure GRAPH_DATA_YT object
   //
 
-  for (i = 0; i < MAX_NUM_DATA_OBJ; i++) {
+  for (i = 0; i < 3; i++) {
     // Create a point valude which include a X-axis value on the Y-axis
     hData[i] = GRAPH_DATA_YT_Create(_aColorData_sensor[i], xSize - (DIST_TO_BORDER << 1) - BORDER_LEFT, 0, 0);
   }
@@ -389,12 +403,12 @@ static void _Graph_Sensor_Demo()
   GRAPH_SCALE_Delete(_hScaleH_sensor);
   GRAPH_SCALE_Delete(_hScaleV_sensor);
 
-  for (i = 0; i < MAX_NUM_DATA_OBJ; i++) {
+  for (i = 0; i < 3; i++) {
     GRAPH_DATA_YT_Delete(hData[i]);
   }
   // GRAPH_DATA_YT_Delete(hData);
   WM_DeleteWindow(hGraph);
-  WIDGET_SetDefaultEffect(pEffectOld);
+  // WIDGET_SetDefaultEffect(pEffectOld);
 
 }
 
@@ -407,14 +421,16 @@ void GUIDEMO_Unclassified(void) {
 	uint32_t humi_data = 0;
 	uint32_t als_data = 0;
 	uint32_t ps_data = 0;
-
+#if 0
 	if (sensor_all_open() != 0)
 		return;
-
+#endif
+  sensor_all_open();
   // set back screen black
-  GUIDEMO_HideInfoWin();
-  GUIDEMO_ShowControlWin();
-  GUI_Exec();
+
+  // GUIDEMO_HideInfoWin();
+  // GUIDEMO_ShowControlWin();
+  // GUI_Exec();
   GUIDEMO_DrawBk(1);
   GUI_SetColor(GUI_BLACK);
   GUIDEMO_DrawBk(1);
@@ -505,20 +521,12 @@ void GUIDEMO_Unclassified(void) {
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  14);
       }
 
-      if (key_flag == 1)
-        break;
-
-      krhino_task_sleep(krhino_ms_to_ticks(400));
-
-      if (key_flag == 1)
-        break;
-
-      krhino_task_sleep(krhino_ms_to_ticks(300));
-
-      if (key_flag == 1)
-        break;
-
-      krhino_task_sleep(krhino_ms_to_ticks(300));
+      int time_counter = 0;
+      for ( ; time_counter < 10; ++time_counter) {
+        if (key_flag != GUI_DEMO_PAGE_2)
+          return;
+        krhino_task_sleep(krhino_ms_to_ticks(100));
+      }
    //   WM_SetCallback(WM_HBKWIN, _cbDesktop);
 
   }while(1);
@@ -529,7 +537,105 @@ void GUIDEMO_Sensor_Graph (void)
 {
   GUIDEMO_ShowInfoWin();
   _Graph_Sensor_Demo();
-  GUIDEMO_NotifyStartNext();
+  // GUIDEMO_NotifyStartNext();
+}
+
+void GUIDEMO_Version_Info (void)
+{
+  #define VERSION_X_OFFSET     20
+  #define VERSION_Y_START      40
+  #define VERSION_Y_STEP       20
+
+  // GUIDEMO_HideInfoWin();
+  // GUIDEMO_ShowControlWin();
+  // GUI_Exec();
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+	GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font20_ASCII);
+
+  // display version info
+  GUI_DispStringAt("Hardware version: xxxxxx",     VERSION_X_OFFSET, VERSION_Y_START);
+  GUI_DispStringAt("Firmware version: xxxxxx",     VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
+  GUI_DispStringAt("Slogan: xxxxxx",               VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
+  GUI_DispStringAt("Wifi: xxxxxx",                 VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
+  GUI_DispStringAt("Ssid: xxxxxx",                 VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 4);
+
+  while(1) {
+    if (key_flag != GUI_DEMO_PAGE_1)
+      return;
+
+    krhino_task_sleep(krhino_ms_to_ticks(100));
+  }
+}
+
+#define SOUND_FUN_IDLE       0
+#define SOUND_FUN_EXECUTE    1
+
+int sound_record;
+int sound_play;
+void GUIDEMO_Sound_record (void)
+{
+  #define INFO_START_X_OFFSET    40
+  #define INFO_START_Y_START     40
+  #define INFO_Y_STEP            20
+
+  // GUIDEMO_HideInfoWin();
+  // GUIDEMO_ShowControlWin();
+  // GUI_Exec();
+  GUIDEMO_DrawBk(1);
+  GUI_SetColor(GUI_BLACK);
+  GUIDEMO_DrawBk(1);
+
+  // set font
+	GUI_SetColor(GUI_WHITE);
+  GUI_SetFont(&GUI_Font20_ASCII);
+
+  // display notes
+  GUI_DispStringAt("Press key A to record",     INFO_START_X_OFFSET, INFO_START_Y_START);
+  GUI_DispStringAt("Press key B to play",       INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP);
+
+  sound_record = SOUND_FUN_IDLE;
+  sound_play = SOUND_FUN_IDLE;
+
+  while (key_flag == GUI_DEMO_PAGE_4) {
+    if (sound_record == SOUND_FUN_EXECUTE) {
+      // display on LED
+      GUI_DispStringAt("Recording...",     INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+
+      // execute sound record
+      record_to_flash();
+      // krhino_task_sleep(krhino_ms_to_ticks(2000));
+      // clean display
+      GUI_GotoXY(INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_DispCEOL();
+
+      // set sound_record to idle
+      sound_record = SOUND_FUN_IDLE;
+    }
+
+    if (sound_play == SOUND_FUN_EXECUTE) {
+      // display on LED
+      GUI_DispStringAt("Playing...",       INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+
+      // execute sound play
+      playback_from_flash();
+
+      // clean display
+      GUI_GotoXY(INFO_START_X_OFFSET, INFO_START_Y_START + INFO_Y_STEP * 3);
+      GUI_DispCEOL();
+
+      // set sound_play to idle
+      sound_play = SOUND_FUN_IDLE;
+    }
+
+    // sleep 100ms
+    krhino_task_sleep(krhino_ms_to_ticks(100));
+  }
+
 }
 
 #else
