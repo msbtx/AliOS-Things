@@ -439,14 +439,18 @@ void GUIDEMO_Unclassified(void) {
 	GUI_SetColor(GUI_WHITE);
   GUI_SetFont(&GUI_Font16_ASCII);
 
-  GUI_DispStringAt("acc_x",         GUIDEMO_UNCLASSIFIED_OFFSET, Y_START);
-  GUI_DispStringAt("acc_y",         GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
-  GUI_DispStringAt("acc_z",         GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+  GUI_DispStringAt("step",                GUIDEMO_UNCLASSIFIED_OFFSET, Y_START);
+  GUI_DispStringAt("acc_x",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
+  GUI_DispStringAt("acc_y",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+  GUI_DispStringAt("acc_z",               GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
+#if 0
   GUI_DispStringAt("barometer",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
   GUI_DispStringAt("temperature",   GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
   GUI_DispStringAt("humidity",      GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
-  GUI_DispStringAt("als",           GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  12);
-	GUI_DispStringAt("proximity",     GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  14);
+#endif
+  GUI_DispStringAt("als",                  GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
+	GUI_DispStringAt("proximity",            GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
+  GUI_DispStringAt("sensor data upload:",  GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  12);
 
 
   // GUI_HWIN hWnd;
@@ -465,22 +469,22 @@ void GUIDEMO_Unclassified(void) {
 				acc_nkg[0] = (float)acc_adc_data[0] * 9.8 / 1024;
 				acc_nkg[1] = (float)acc_adc_data[1] * 9.8 / 1024;
 				acc_nkg[2] = (float)acc_adc_data[2] * 9.8 / 1024;
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  0);
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
 				GUI_DispFloatFix(acc_nkg[0], 7, 3);
 				GUI_DispString("N/kg");
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
 				GUI_DispFloatFix(acc_nkg[1], 7, 3);
 				GUI_DispString("N/kg");
-				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+				GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
 				GUI_DispFloatFix(acc_nkg[2], 7, 3);
 				GUI_DispString("N/kg");
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  0);
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  2);
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  4);
+        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
       }
-
+#if 0
       if (!get_baro_data(&baro_data)) {
         GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  6);
         GUI_DispDec(baro_data, DEC_LEN_DEF);
@@ -504,21 +508,21 @@ void GUIDEMO_Unclassified(void) {
       else {
         GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
       }
-			
+#endif
 			if (!get_als_data(&als_data)) {
-        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  12);
+        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
         GUI_DispDec(als_data, DEC_LEN_DEF);
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  12);
+        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  8);
       }
 			
 			if (!get_ps_data(&ps_data)) {
-        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  14);
+        GUI_GotoXY((xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
         GUI_DispDec(ps_data, DEC_LEN_DEF);
       }
       else {
-        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  14);
+        GUI_DispStringAt("unknow", (xSize >> 1) + GUIDEMO_UNCLASSIFIED_OFFSET, Y_START + Y_STEP *  10);
       }
 
       int time_counter = 0;
