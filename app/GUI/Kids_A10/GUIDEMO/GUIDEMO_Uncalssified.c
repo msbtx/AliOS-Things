@@ -94,7 +94,7 @@ static int sensor_all_open(void)
 		return -1;
 	}
 	fd_acc = fd;
-
+#if 0
 	fd = aos_open(dev_baro_path, O_RDWR);
 	if (fd < 0) {
 		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
@@ -115,7 +115,7 @@ static int sensor_all_open(void)
 		return -1;
 	}
 	fd_humi = fd;
-
+#endif
 	fd = aos_open(dev_als_path, O_RDWR);
 	if (fd < 0) {
 		KIDS_A10_PRT("Error: aos_open return %d.\n", fd);
@@ -565,8 +565,7 @@ void GUIDEMO_Version_Info (void)
   GUI_DispStringAt("Hardware version: xxxxxx",     VERSION_X_OFFSET, VERSION_Y_START);
   GUI_DispStringAt("Firmware version: xxxxxx",     VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP);
   GUI_DispStringAt("Slogan: xxxxxx",               VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 2);
-  GUI_DispStringAt("Wifi: xxxxxx",                 VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
-  GUI_DispStringAt("Ssid: xxxxxx",                 VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 4);
+  GUI_DispStringAt("Wifi Ssid: xxxxxx",                 VERSION_X_OFFSET, VERSION_Y_START + VERSION_Y_STEP * 3);
 
   while(1) {
     if (key_flag != GUI_DEMO_PAGE_1)
